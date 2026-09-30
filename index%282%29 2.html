@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Revitam | Control de Clientes</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f5;color:#202725}
+header{background:#183f35;color:#fff;padding:24px 6%}header h1{margin:0;font-size:26px}header p{margin:5px 0 0;opacity:.8}
+main{max-width:1150px;margin:auto;padding:28px 20px}
+.panel{background:#fff;border:1px solid #dce3e0;border-radius:12px;padding:20px;margin-bottom:20px}
+h2{margin:0 0 16px;font-size:19px;color:#183f35}
+form{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #ccd5d1;border-radius:7px;font:inherit}
+textarea{grid-column:span 3;min-height:70px}.actions{grid-column:span 3;text-align:right}
+button{border:0;border-radius:7px;padding:11px 17px;font-weight:bold;cursor:pointer}
+.primary{background:#183f35;color:#fff}.secondary{background:#e8f0ed;color:#183f35}.edit{background:#e8f0ed;color:#183f35;padding:7px 10px}.delete{background:#f5e9e9;color:#8a2d2d;padding:7px 10px}
+.search{max-width:350px;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:12px 9px;border-bottom:1px solid #dce3e0;text-align:left}
+th{font-size:12px;color:#68736f;text-transform:uppercase}.empty{text-align:center;color:#68736f;padding:28px}
+footer{text-align:center;color:#68736f;font-size:12px;padding:0 0 25px}
+@media(max-width:700px){form{grid-template-columns:1fr}textarea,.actions{grid-column:span 1}.tablewrap{overflow:auto}}
+
+.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.metric{background:#fff;border:1px solid #dce3e0;border-radius:12px;padding:16px}
+.metric small{color:#68736f}.metric strong{display:block;font-size:25px;color:#183f35;margin-top:6px}
+.badge{display:inline-block;padding:5px 8px;border-radius:12px;font-size:12px;background:#e8f0ed;color:#183f35}
+.badge.late{background:#f5e9e9;color:#8a2d2d}
+#contenedorForm,#recoleccionForm{grid-template-columns:repeat(3,1fr)}
+@media(max-width:700px){.dashboard{grid-template-columns:1fr 1fr}#contenedorForm,#recoleccionForm{grid-template-columns:1fr}}
+</style>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+:root{
+ --brand:#173d34;--brand2:#22564a;--ink:#18201e;--muted:#6d7773;
+ --line:#e5e9e7;--surface:#ffffff;--canvas:#f6f8f7;--soft:#eef3f1;
+ --danger:#a04444;--shadow:0 10px 30px rgba(24,32,30,.055);
+}
+*{box-sizing:border-box}
+body{font-family:'Montserrat',Arial,sans-serif;background:var(--canvas);color:var(--ink)}
+header{
+ position:fixed;left:0;top:0;bottom:0;width:245px;height:100vh;padding:32px 22px;
+ background:#153a31;z-index:10;display:block
+}
+header h1{font-size:20px;letter-spacing:.7px;margin:0 0 5px}
+header p{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;margin:0 0 32px}
+
+main{max-width:none;margin-left:245px;padding:36px 42px}
+
+main:after{content:"";display:block}
+.dashboard{gap:16px;margin:24px 0}
+.metric,.panel{border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;background:var(--surface)}
+.metric{padding:19px 20px;position:relative;overflow:hidden}
+.metric:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--brand)}
+.metric small{font-size:11px;text-transform:uppercase;letter-spacing:.65px;font-weight:600}
+.metric strong{font-size:28px;margin-top:8px}
+.panel{padding:24px;margin-bottom:22px}
+h2{font-size:17px;letter-spacing:-.2px;margin-bottom:20px}
+input,select,textarea{
+ font-family:'Montserrat',Arial,sans-serif;background:#fff;border:1px solid #dfe5e2;
+ border-radius:9px;padding:12px 13px;outline:none;transition:.18s
+}
+input:focus,select:focus,textarea:focus{border-color:#6d9187;box-shadow:0 0 0 3px rgba(23,61,52,.07)}
+button{font-family:'Montserrat',Arial,sans-serif;border-radius:8px;font-size:12px;transition:.15s}
+button:hover{transform:translateY(-1px)}
+.primary{background:var(--brand);padding:11px 18px}.primary:hover{background:var(--brand2)}
+.secondary,.edit{background:var(--soft);color:var(--brand)}
+.delete{background:#f8eeee;color:var(--danger)}
+table{font-size:12px}
+th{background:#fafbfb;color:#76807c;font-size:10px;letter-spacing:.55px;padding:12px 10px}
+td{padding:13px 10px}
+tbody tr:hover{background:#fafcfb}
+.badge{font-weight:600;font-size:10px}
+footer{margin-left:245px;padding:0 42px 28px;text-align:left;font-size:10px}
+@media(max-width:900px){
+ header{position:relative;width:100%;height:auto;padding:20px 22px}
+ 
+ main{margin-left:0;padding:24px 18px}footer{margin-left:0;padding:0 18px 24px}
+}
+@media(max-width:600px){.dashboard{grid-template-columns:1fr}.panel{padding:17px}}
+</style>
+
+
+<style>
+.decision-panel{background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:24px;margin-bottom:22px}
+.decision-head{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:18px}
+.decision-head h2{margin:0}.decision-head p{margin:5px 0 0;color:var(--muted);font-size:12px}
+.week-total{text-align:right}.week-total small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px}.week-total strong{font-size:24px;color:var(--brand)}
+.traffic{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:10px;padding:5px 8px;border-radius:14px;white-space:nowrap}
+.traffic:before{content:"";width:8px;height:8px;border-radius:50%;display:inline-block}
+.traffic.red{background:#f8eeee;color:#8f3535}.traffic.red:before{background:#b64242}
+.traffic.yellow{background:#fff6dc;color:#7c6419}.traffic.yellow:before{background:#d7a916}
+.traffic.green{background:#eaf3ef;color:#24594b}.traffic.green:before{background:#3d816d}
+.priority-table td{vertical-align:middle}.priority-table .client{font-weight:700;color:var(--ink)}
+.subtle{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+@media(max-width:700px){.decision-head{align-items:flex-start;flex-direction:column}.week-total{text-align:left}}
+
+</style>
+
+<style>
+.catalog-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.catalog-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid #dfe5e1;border-radius:20px;padding:6px 10px;background:#fff;font-size:13px}
+.catalog-chip button{border:0;background:transparent;color:#8a2d2d;cursor:pointer;padding:0;font-weight:700}
+.inline-form{display:flex;gap:8px;align-items:center}
+.inline-form input{flex:1}
+
+.app-nav{border-top:1px solid rgba(255,255,255,.18);padding-top:16px;display:flex;flex-direction:column;gap:5px}
+.app-nav button{width:100%;text-align:left;color:#e2eee8;background:transparent;padding:12px 14px;font-size:12px}
+.app-nav button:hover,.app-nav button.active{background:#2c6052;color:#fff;transform:none}
+.app-nav button:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+#pageTitle{font-size:26px;margin:0 0 18px;color:var(--ink)}
+[data-view]{display:none}
+[data-view].active{display:block}
+.dashboard[data-view].active{display:grid}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+@media(max-width:900px){.app-nav{flex-direction:row;overflow-x:auto;white-space:nowrap;padding-bottom:4px}.app-nav button{width:auto;flex:none}}
+@media(max-width:600px){.metrics{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+<h1>REVITAM | Control de Clientes</h1>
+<p>CRM · Versión 0.9</p>
+<nav class="app-nav" aria-label="Apartados del CRM">
+<button type="button" data-target="dashboard">Dashboard</button>
+<button type="button" data-target="clientes">Clientes</button>
+<button type="button" data-target="contenedores">Contenedores</button>
+<button type="button" data-target="recolecciones">Recolecciones</button>
+<button type="button" data-target="reportes">Reportes</button>
+<button type="button" data-target="productos">Productos y servicios</button>
+<button type="button" data-target="catalogos">Catálogos</button>
+</nav>
+</header>
+<main>
+<h1 id="pageTitle">Dashboard</h1>
+<section class="dashboard active" data-view="dashboard">
+<div class="metric"><small>Contenedores</small><strong id="mCont">0</strong></div>
+<div class="metric"><small>Por recoger</small><strong id="mPend">0</strong></div>
+<div class="metric"><small>Toneladas registradas</small><strong id="mTon">0</strong></div>
+<div class="metric"><small>Clientes con contenedor</small><strong id="mCli">0</strong></div>
+</section>
+<section class="panel" data-view="dashboard">
+<div class="decision-head"><div><h2>Próximas recolecciones</h2><p>Prioridades calculadas con el historial de cada contenedor.</p></div><div class="week-total"><small>Estimado próximos 7 días y pendientes</small><strong id="ton7">0 t</strong></div></div>
+<div class="tablewrap"><table class="priority-table"><thead><tr><th>Prioridad</th><th>Cliente / contenedor</th><th>Material</th><th>Última</th><th>Promedio</th><th>Frecuencia</th><th>Días desde última</th><th>Próxima</th><th>Chofer habitual</th></tr></thead><tbody id="tablaProximas"></tbody></table></div>
+</section>
+
+<section class="panel" data-view="clientes">
+<h2>Registrar cliente</h2>
+<form id="form">
+<input id="empresa" required placeholder="Empresa / cliente">
+<input id="contacto" placeholder="Persona de contacto">
+<input id="telefono" placeholder="Teléfono">
+<input id="correo" type="email" placeholder="Correo electrónico">
+<select id="estatus"><option>Prospecto</option><option>Contactado</option><option>Cliente activo</option><option>Inactivo</option></select>
+<input id="seguimiento" type="date" title="Próximo seguimiento">
+<textarea id="notas" placeholder="Notas y observaciones"></textarea>
+<div class="actions"><button class="primary" type="submit">Guardar cliente</button></div>
+</form>
+</section>
+
+<section class="panel" data-view="contenedores">
+<h2>Control de contenedores</h2>
+<form id="contenedorForm">
+<input id="cNumero" required placeholder="Número / ID del contenedor">
+<select id="cCliente" required><option value="">Seleccionar cliente...</option></select>
+<input id="cUbicacion" placeholder="Ubicación / planta / área">
+<select id="cMaterial"><option value="">Material</option><option>Chatarra ferrosa</option><option>Cobre</option><option>Aluminio</option><option>Bronce</option><option>Cartón</option><option>PET</option><option>HDPE / plástico</option><option>Otro</option></select>
+<input id="cCapacidad" type="number" min="0" step=".01" placeholder="Capacidad (t)">
+<input id="cColocacion" type="date" title="Fecha de colocación">
+<select id="cEstatus"><option>Asignado</option><option>Disponible</option><option>Retirado temporalmente</option><option>Mantenimiento</option><option>Baja definitiva</option></select>
+<input id="cRetiro" type="date" title="Fecha de retiro">
+<input id="cMotivo" placeholder="Motivo de retiro / cambio">
+<div class="actions"><button type="button" class="secondary" id="cancelC" style="display:none">Cancelar</button> <button class="primary" id="saveC">Agregar contenedor</button></div>
+</form>
+<div class="tablewrap" style="margin-top:18px"><table>
+<thead><tr><th>Contenedor</th><th>Cliente</th><th>Material</th><th>Capacidad</th><th>Última</th><th>Promedio</th><th>Frecuencia</th><th>Próxima estimada</th><th>Acciones</th></tr></thead>
+<tbody id="tablaCont"></tbody></table></div>
+</section>
+
+<section class="panel" data-view="catalogos">
+<h2>Catálogos operativos</h2>
+<div class="formgrid">
+  <div>
+    <h3>Choferes</h3>
+    <form id="choferForm" class="inline-form">
+      <input id="choferNombre" placeholder="Nombre del chofer" required>
+      <button type="submit">Agregar chofer</button>
+    </form>
+    <div id="listaChoferes" class="catalog-list"></div>
+  </div>
+  <div>
+    <h3>Unidades</h3>
+    <form id="unidadForm" class="inline-form">
+      <input id="unidadNombre" placeholder="Unidad / número económico" required>
+      <button type="submit">Agregar unidad</button>
+    </form>
+    <div id="listaUnidades" class="catalog-list"></div>
+  </div>
+</div>
+</section>
+
+<section class="panel" data-view="reportes" id="reportes">
+<h2>Reportes</h2>
+<p class="muted">Consulta la operación por periodo y genera información útil para control interno o seguimiento con clientes.</p>
+<div class="formgrid">
+  <input id="repDesde" type="date" title="Desde">
+  <input id="repHasta" type="date" title="Hasta">
+  <select id="repCliente"><option value="">Todos los clientes</option></select>
+  <select id="repMaterial"><option value="">Todos los materiales</option></select>
+  <select id="repChofer"><option value="">Todos los choferes</option></select>
+  <select id="repUnidad"><option value="">Todas las unidades</option></select>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+ <button type="button" onclick="generarReporte()">Generar reporte</button>
+ <button type="button" class="secondary" onclick="periodoReporte('mes')">Este mes</button>
+ <button type="button" class="secondary" onclick="periodoReporte('anterior')">Mes anterior</button>
+ <button type="button" class="secondary" onclick="window.print()">Imprimir / PDF</button>
+</div>
+<div class="metrics">
+ <div class="metric"><span>Toneladas</span><strong id="repTon">0.0 t</strong></div>
+ <div class="metric"><span>Recolecciones</span><strong id="repViajes">0</strong></div>
+ <div class="metric"><span>Promedio por viaje</span><strong id="repProm">0.0 t</strong></div>
+ <div class="metric"><span>Clientes atendidos</span><strong id="repClientes">0</strong></div>
+</div>
+<h3>Detalle de movimientos</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Fecha</th><th>Cliente</th><th>Contenedor</th><th>Material</th><th>Toneladas</th><th>Chofer</th><th>Unidad</th></tr></thead>
+<tbody id="tablaReporte"></tbody>
+</table></div>
+<h3>Productividad por contenedor</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Contenedor</th><th>Cliente</th><th>Material</th><th>Recolecciones</th><th>Toneladas</th><th>Promedio/viaje</th></tr></thead>
+<tbody id="tablaProdCont"></tbody>
+</table></div>
+<h3>Comparativo mensual</h3>
+<div id="comparativoReporte" class="decision-panel"></div>
+</section>
+
+<section class="panel" data-view="contenedores">
+<h2>Historial de asignaciones de contenedores</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Contenedor</th><th>Cliente</th><th>Desde</th><th>Hasta</th><th>Material</th><th>Motivo / movimiento</th></tr></thead>
+<tbody id="tablaAsignaciones"></tbody>
+</table></div>
+</section>
+
+<section class="panel" data-view="recolecciones">
+<h2>Registrar recolección</h2>
+<form id="recoleccionForm">
+<select id="rContenedor" required><option value="">Selecciona contenedor</option></select>
+<input id="rFecha" type="date" required>
+<input id="rCantidad" type="number" min="0" step=".001" required placeholder="Cantidad recolectada (t)">
+<select id="rChofer" required><option value="">Seleccionar chofer...</option></select>
+<select id="rUnidad"><option value="">Seleccionar unidad...</option></select>
+<input id="rNotas" placeholder="Observaciones">
+<div class="actions"><button class="primary">Guardar recolección</button></div>
+</form>
+<div class="tablewrap" style="margin-top:18px"><table>
+<thead><tr><th>Fecha</th><th>Contenedor / cliente</th><th>Cantidad</th><th>Chofer</th><th>Unidad</th><th></th></tr></thead>
+<tbody id="tablaRec"></tbody></table></div>
+</section>
+
+<section class="panel" data-view="productos">
+<h2>Productos y servicios</h2>
+<form id="productoForm">
+<input id="productoNombre" required placeholder="Nombre del producto o servicio">
+<select id="productoTipo"><option>Producto</option><option>Servicio</option></select>
+<input id="productoPrecio" type="number" min="0" step="0.01" placeholder="Precio / tarifa">
+<textarea id="productoDescripcion" placeholder="Descripción"></textarea>
+<div class="actions">
+<button type="button" class="secondary" id="cancelarProducto" style="display:none">Cancelar</button>
+<button class="primary" id="guardarProducto" type="submit">Agregar</button>
+</div>
+</form>
+<div class="tablewrap" style="margin-top:18px">
+<table>
+<thead><tr><th>Nombre</th><th>Tipo</th><th>Precio / tarifa</th><th>Descripción</th><th>Acciones</th></tr></thead>
+<tbody id="tablaProductos"></tbody>
+</table>
+</div>
+</section>
+
+<section class="panel" data-view="clientes">
+<h2>Clientes</h2>
+<input class="search" id="buscar" placeholder="Buscar cliente o contacto...">
+<div class="tablewrap">
+<table>
+<thead><tr><th>Empresa</th><th>Contacto</th><th>Teléfono</th><th>Estatus</th><th>Seguimiento</th><th></th></tr></thead>
+<tbody id="tabla"></tbody>
+</table>
+</div>
+</section>
+</main>
+<footer>Revitam · En mejora continua</footer>
+<script>
+const KEY="revitam_clientes_v01";
+let clientes=JSON.parse(localStorage.getItem(KEY)||"[]");
+const PRODUCT_KEY="revitam_productos_v02";
+let productos=JSON.parse(localStorage.getItem(PRODUCT_KEY)||"[]");
+let productoEditando=null;
+const CONT_KEY="revitam_contenedores_v03", REC_KEY="revitam_recolecciones_v03";
+let contenedores=JSON.parse(localStorage.getItem(CONT_KEY)||"[]");
+let recolecciones=JSON.parse(localStorage.getItem(REC_KEY)||"[]");
+let contEditando=null;
+const ASIG_KEY="revitam_asignaciones_v06";
+const CHOFER_KEY="revitam_choferes_v07";
+const UNIDAD_KEY="revitam_unidades_v07";
+let choferes=JSON.parse(localStorage.getItem(CHOFER_KEY)||"[]");
+let unidades=JSON.parse(localStorage.getItem(UNIDAD_KEY)||"[]");
+let asignaciones=JSON.parse(localStorage.getItem(ASIG_KEY)||"[]");
+const $=x=>document.getElementById(x);
+const esc=v=>String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+function guardar(){localStorage.setItem(KEY,JSON.stringify(clientes));render();actualizarSelects();}
+function render(){
+ const q=$("buscar").value.toLowerCase();
+ const d=clientes.filter(c=>(c.empresa+" "+c.contacto).toLowerCase().includes(q));
+ $("tabla").innerHTML=d.length?d.map(c=>`<tr><td><strong>${esc(c.empresa)}</strong></td><td>${esc(c.contacto||"-")}</td><td>${esc(c.telefono||"-")}</td><td>${esc(c.estatus)}</td><td>${c.seguimiento||"-"}</td><td><button class="delete" onclick="eliminar('${c.id}')">Eliminar</button></td></tr>`).join(""):'<tr><td colspan="6" class="empty">No hay clientes registrados.</td></tr>';
+}
+
+
+function diasEntre(a,b){return Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/86400000);}
+function choferHabitual(rs){
+ if(!rs.length)return "-";
+ const cuenta={};rs.forEach(r=>{const c=(r.chofer||"").trim();if(c)cuenta[c]=(cuenta[c]||0)+1});
+ const arr=Object.entries(cuenta).sort((a,b)=>b[1]-a[1]);return arr.length?arr[0][0]:"-";
+}
+function datosCont(uid){
+ const rs=recolecciones.filter(r=>r.contenedor===uid).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+ const prom=rs.length?rs.reduce((a,r)=>a+Number(r.cantidad||0),0)/rs.length:0;
+ let freq=0;
+ if(rs.length>1){
+  let intervalos=[];
+  for(let i=1;i<rs.length;i++){const x=diasEntre(rs[i-1].fecha,rs[i].fecha);if(x>=0)intervalos.push(x);}
+  if(intervalos.length)freq=intervalos.reduce((a,b)=>a+b,0)/intervalos.length;
+ }
+ const ultima=rs.length?rs[rs.length-1].fecha:"";
+ let proxima="";
+ if(ultima&&freq){let d=new Date(ultima+"T12:00:00");d.setDate(d.getDate()+Math.round(freq));proxima=d.toISOString().slice(0,10);}
+ const hoy=new Date().toISOString().slice(0,10);
+ const transcurridos=ultima?Math.max(0,diasEntre(ultima,hoy)):null;
+ return {rs,prom,freq,ultima,proxima,transcurridos,chofer:choferHabitual(rs)};
+}
+function renderProximas(){
+ const hoy=new Date().toISOString().slice(0,10);
+ const fin=new Date(hoy+"T12:00:00");fin.setDate(fin.getDate()+7);const fin7=fin.toISOString().slice(0,10);
+ let filas=contenedores.filter(c=>c.estatus==="Asignado").map(c=>{
+   const d=datosCont(c.uid);let nivel="green",orden=2,texto="Sin historial";
+   if(d.proxima){
+     const faltan=diasEntre(hoy,d.proxima);
+     if(faltan<=0){nivel="red";orden=0;texto=faltan<0?"Vencida":"Hoy";}
+     else if(faltan<=3){nivel="yellow";orden=1;texto="En "+faltan+" día"+(faltan===1?"":"s");}
+     else {nivel="green";orden=2;texto="En "+faltan+" días";}
+   }
+   return {c,d,nivel,orden,texto};
+ }).sort((a,b)=>a.orden-b.orden || (a.d.proxima||"9999").localeCompare(b.d.proxima||"9999"));
+ $("tablaProximas").innerHTML=filas.length?filas.map(x=>`<tr>
+  <td><span class="traffic ${x.nivel}">${x.texto}</span></td>
+  <td><span class="client">${esc(x.c.cliente)}</span><span class="subtle">Contenedor ${esc(x.c.numero)}</span></td>
+  <td>${esc(x.c.material||"-")}</td><td>${x.d.ultima||"-"}</td>
+  <td>${x.d.prom?x.d.prom.toFixed(2)+" t":"-"}</td><td>${x.d.freq?x.d.freq.toFixed(1)+" días":"-"}</td>
+  <td>${x.d.transcurridos===null?"-":x.d.transcurridos+" días"}</td><td>${x.d.proxima||"-"}</td><td>${esc(x.d.chofer)}</td></tr>`).join("")
+  :'<tr><td colspan="9" class="empty">Agrega contenedores activos e historial de recolecciones para generar prioridades.</td></tr>';
+ const t7=filas.filter(x=>x.d.proxima&&x.d.proxima>=hoy&&x.d.proxima<=fin7).reduce((a,x)=>a+x.d.prom,0)
+       +filas.filter(x=>x.d.proxima&&x.d.proxima<hoy).reduce((a,x)=>a+x.d.prom,0);
+ $("ton7").textContent=t7.toFixed(2)+" t";
+}
+function renderContenedores(){
+ const hoy=new Date().toISOString().slice(0,10);
+ $("tablaCont").innerHTML=contenedores.length?contenedores.map(c=>{
+  const d=datosCont(c.uid), late=d.proxima&&d.proxima<=hoy;
+  return `<tr><td><strong>${esc(c.numero)}</strong><br><span class="badge">${esc(c.estatus)}</span></td>
+  <td>${esc(c.cliente)}<br><small>${esc(c.ubicacion||"")}</small></td><td>${esc(c.material||"-")}</td>
+  <td>${c.capacidad||"-"} t</td><td>${d.ultima||"-"}</td><td>${d.prom?d.prom.toFixed(2)+" t":"-"}</td>
+  <td>${d.freq?Math.round(d.freq)+" días":"Sin historial"}</td>
+  <td>${d.proxima?`<span class="badge ${late?'late':''}">${d.proxima}${late?" · pendiente":""}</span>`:"-"}</td>
+  <td><button class="edit" onclick="editarCont('${c.uid}')">Editar</button> ${c.estatus==="Asignado"?`<button class="secondary" onclick="retirarCont('${c.uid}')">Retirar</button>`:""} <button class="delete" onclick="eliminarCont('${c.uid}')">Eliminar</button></td></tr>`;
+ }).join(""):'<tr><td colspan="9" class="empty">No hay contenedores registrados.</td></tr>';
+ $("rContenedor").innerHTML='<option value="">Selecciona contenedor</option>'+contenedores.filter(c=>c.estatus==="Asignado").map(c=>`<option value="${c.uid}">${esc(c.numero)} · ${esc(c.cliente)}</option>`).join("");
+ actualizarDashboard();renderProximas();
+}
+function guardarContenedores(){localStorage.setItem(CONT_KEY,JSON.stringify(contenedores));renderContenedores();actualizarSelects();}
+function editarCont(uid){
+ const c=contenedores.find(x=>x.uid===uid);if(!c)return;contEditando=uid;
+ $("cNumero").value=c.numero;$("cCliente").value=c.cliente;$("cUbicacion").value=c.ubicacion||"";$("cMaterial").value=c.material||"";
+ $("cCapacidad").value=c.capacidad||"";$("cColocacion").value=c.colocacion||"";$("cEstatus").value=c.estatus;
+ $("cRetiro").value=c.retiro||"";$("cMotivo").value=c.motivo||"";
+ $("saveC").textContent="Guardar cambios";$("cancelC").style.display="inline-block";
+}
+function cancelarCont(){contEditando=null;$("contenedorForm").reset();$("saveC").textContent="Agregar contenedor";$("cancelC").style.display="none";}
+function retirarCont(uid){
+ const c=contenedores.find(x=>x.uid===uid);if(!c)return;
+ const motivo=prompt("Motivo del retiro del contenedor:","Cliente ya no requiere el contenedor");
+ if(motivo===null)return;
+ const hoy=new Date().toISOString().slice(0,10);
+ c.estatus="Disponible";c.retiro=hoy;c.motivo=motivo;
+ const abierta=asignaciones.find(a=>a.contenedor===uid&&!a.hasta);
+ if(abierta){abierta.hasta=hoy;abierta.motivo=motivo;}
+ localStorage.setItem(ASIG_KEY,JSON.stringify(asignaciones));guardarContenedores();renderAsignaciones();
+}
+function eliminarCont(uid){
+ const c=contenedores.find(x=>x.uid===uid);if(!c)return;
+ if(confirm("ELIMINAR se usa únicamente para registros creados por error.\\n\\n¿Confirmas que deseas eliminar el contenedor "+c.numero+"?")){
+   contenedores=contenedores.filter(x=>x.uid!==uid);
+   recolecciones=recolecciones.filter(r=>r.contenedor!==uid);
+   asignaciones=asignaciones.filter(a=>a.contenedor!==uid);
+   localStorage.setItem(REC_KEY,JSON.stringify(recolecciones));
+   localStorage.setItem(ASIG_KEY,JSON.stringify(asignaciones));
+   guardarContenedores();renderRecolecciones();renderAsignaciones();generarReporte();cancelarCont();
+ }
+}
+
+function clientesCatalogo(){
+ return [...new Set(clientes.map(c=>c.empresa).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+}
+function actualizarSelects(){
+ const clienteActual=$("cCliente")?.value||"";
+ if($("cCliente")){
+   $("cCliente").innerHTML='<option value="">Seleccionar cliente...</option>'+clientesCatalogo().map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+   if(clientesCatalogo().includes(clienteActual)) $("cCliente").value=clienteActual;
+ }
+ const ch=$("rChofer")?.value||"";
+ if($("rChofer")){
+   $("rChofer").innerHTML='<option value="">Seleccionar chofer...</option>'+choferes.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+   if(choferes.includes(ch)) $("rChofer").value=ch;
+ }
+ const un=$("rUnidad")?.value||"";
+ if($("rUnidad")){
+   $("rUnidad").innerHTML='<option value="">Seleccionar unidad...</option>'+unidades.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+   if(unidades.includes(un)) $("rUnidad").value=un;
+ }
+ const fill=(id,vals,label)=>{if(!$(id))return;const old=$(id).value;$(id).innerHTML=`<option value="">${label}</option>`+vals.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");if(vals.includes(old))$(id).value=old;};
+ fill("repCliente",clientesCatalogo(),"Todos los clientes");
+ fill("repChofer",choferes,"Todos los choferes");
+ fill("repUnidad",unidades,"Todas las unidades");
+ const mats=[...new Set(contenedores.map(c=>c.material).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+ fill("repMaterial",mats,"Todos los materiales");
+}
+function renderCatalogos(){
+ if($("listaChoferes")) $("listaChoferes").innerHTML=choferes.length?choferes.map((x,i)=>`<span class="catalog-chip">${esc(x)} <button onclick="eliminarChofer(${i})" title="Eliminar">×</button></span>`).join(""):'<span class="empty">Sin choferes registrados.</span>';
+ if($("listaUnidades")) $("listaUnidades").innerHTML=unidades.length?unidades.map((x,i)=>`<span class="catalog-chip">${esc(x)} <button onclick="eliminarUnidad(${i})" title="Eliminar">×</button></span>`).join(""):'<span class="empty">Sin unidades registradas.</span>';
+ actualizarSelects();
+}
+function eliminarChofer(i){
+ const x=choferes[i];
+ if(recolecciones.some(r=>r.chofer===x)){alert("Este chofer ya tiene historial de recolecciones. No se elimina para conservar la integridad del historial.");return;}
+ if(confirm("¿Eliminar "+x+" del catálogo?")){choferes.splice(i,1);localStorage.setItem(CHOFER_KEY,JSON.stringify(choferes));renderCatalogos();}
+}
+function eliminarUnidad(i){
+ const x=unidades[i];
+ if(recolecciones.some(r=>r.unidad===x)){alert("Esta unidad ya tiene historial de recolecciones. No se elimina para conservar la integridad del historial.");return;}
+ if(confirm("¿Eliminar "+x+" del catálogo?")){unidades.splice(i,1);localStorage.setItem(UNIDAD_KEY,JSON.stringify(unidades));renderCatalogos();}
+}
+$("choferForm")?.addEventListener("submit",e=>{
+ e.preventDefault();const x=$("choferNombre").value.trim();
+ if(!x)return;
+ if(choferes.some(y=>y.toLowerCase()===x.toLowerCase())){alert("Ese chofer ya existe.");return;}
+ choferes.push(x);choferes.sort((a,b)=>a.localeCompare(b));localStorage.setItem(CHOFER_KEY,JSON.stringify(choferes));$("choferNombre").value="";renderCatalogos();
+});
+$("unidadForm")?.addEventListener("submit",e=>{
+ e.preventDefault();const x=$("unidadNombre").value.trim();
+ if(!x)return;
+ if(unidades.some(y=>y.toLowerCase()===x.toLowerCase())){alert("Esa unidad ya existe.");return;}
+ unidades.push(x);unidades.sort((a,b)=>a.localeCompare(b));localStorage.setItem(UNIDAD_KEY,JSON.stringify(unidades));$("unidadNombre").value="";renderCatalogos();
+});
+
+function localDateStr(d){const z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,10);}
+function periodoReporte(tipo){
+ const h=new Date(), y=h.getFullYear(),m=h.getMonth();
+ let a,b;
+ if(tipo==="mes"){a=new Date(y,m,1);b=new Date(y,m+1,0);}
+ else{a=new Date(y,m-1,1);b=new Date(y,m,0);}
+ $("repDesde").value=localDateStr(a);$("repHasta").value=localDateStr(b);generarReporte();
+}
+function contDeRec(r){return contenedores.find(c=>c.uid===r.contenedor)||{};}
+function clienteEnFecha(r,c){
+ const a=asignaciones.find(x=>x.contenedor===r.contenedor && (!x.desde||r.fecha>=x.desde) && (!x.hasta||r.fecha<=x.hasta));
+ return a?.cliente||c.cliente||"-";
+}
+function filtrarReporte(){
+ const d=$("repDesde").value,h=$("repHasta").value,cl=$("repCliente").value,ma=$("repMaterial").value,ch=$("repChofer").value,un=$("repUnidad").value;
+ return recolecciones.filter(r=>{
+   const c=contDeRec(r), cliente=clienteEnFecha(r,c);
+   return (!d||r.fecha>=d)&&(!h||r.fecha<=h)&&(!cl||cliente===cl)&&(!ma||c.material===ma)&&(!ch||r.chofer===ch)&&(!un||r.unidad===un);
+ });
+}
+function generarReporte(){
+ const rs=filtrarReporte();
+ const ton=rs.reduce((a,r)=>a+(parseFloat(r.cantidad)||0),0);
+ $("repTon").textContent=ton.toFixed(1)+" t";$("repViajes").textContent=rs.length;
+ $("repProm").textContent=(rs.length?ton/rs.length:0).toFixed(1)+" t";
+ $("repClientes").textContent=new Set(rs.map(r=>clienteEnFecha(r,contDeRec(r)))).size;
+ $("tablaReporte").innerHTML=rs.length?rs.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(r=>{
+   const c=contDeRec(r);return `<tr><td>${r.fecha||"-"}</td><td>${esc(clienteEnFecha(r,c))}</td><td>${esc(c.numero||"-")}</td><td>${esc(c.material||"-")}</td><td><strong>${Number(r.cantidad||0).toFixed(2)} t</strong></td><td>${esc(r.chofer||"-")}</td><td>${esc(r.unidad||"-")}</td></tr>`;
+ }).join(""):'<tr><td colspan="7" class="empty">No hay movimientos para los filtros seleccionados.</td></tr>';
+ const grupos={};
+ rs.forEach(r=>{const c=contDeRec(r),k=r.contenedor;if(!grupos[k])grupos[k]={c,n:0,t:0,cliente:clienteEnFecha(r,c)};grupos[k].n++;grupos[k].t+=parseFloat(r.cantidad)||0;});
+ $("tablaProdCont").innerHTML=Object.values(grupos).length?Object.values(grupos).sort((a,b)=>b.t-a.t).map(g=>`<tr><td><strong>${esc(g.c.numero||"-")}</strong></td><td>${esc(g.cliente)}</td><td>${esc(g.c.material||"-")}</td><td>${g.n}</td><td>${g.t.toFixed(1)} t</td><td>${(g.t/g.n).toFixed(1)} t</td></tr>`).join(""):'<tr><td colspan="6" class="empty">Sin datos.</td></tr>';
+ renderComparativo();
+}
+function totalMes(y,m){
+ const a=localDateStr(new Date(y,m,1)),b=localDateStr(new Date(y,m+1,0));
+ const rs=recolecciones.filter(r=>r.fecha>=a&&r.fecha<=b),t=rs.reduce((x,r)=>x+(parseFloat(r.cantidad)||0),0);
+ return {t,n:rs.length};
+}
+function renderComparativo(){
+ const h=new Date(),act=totalMes(h.getFullYear(),h.getMonth()),ant=totalMes(h.getFullYear(),h.getMonth()-1);
+ const dif=ant.t?((act.t-ant.t)/ant.t*100):null;
+ $("comparativoReporte").innerHTML=`<strong>Mes actual:</strong> ${act.t.toFixed(1)} t · ${act.n} recolecciones &nbsp; | &nbsp; <strong>Mes anterior:</strong> ${ant.t.toFixed(1)} t · ${ant.n} recolecciones<br><span class="muted">${dif===null?"Aún no hay base suficiente para calcular variación.":`Variación en toneladas: ${dif>=0?"+":""}${dif.toFixed(1)}%`}</span>`;
+}
+function renderAsignaciones(){
+ $("tablaAsignaciones").innerHTML=asignaciones.length?asignaciones.slice().sort((a,b)=>(b.desde||"").localeCompare(a.desde||"")).map(a=>`<tr>
+ <td><strong>${esc(a.numero||"-")}</strong></td><td>${esc(a.cliente||"-")}</td><td>${a.desde||"-"}</td>
+ <td>${a.hasta||'<span class="badge">Actual</span>'}</td><td>${esc(a.material||"-")}</td><td>${esc(a.motivo||"-")}</td></tr>`).join("")
+ :'<tr><td colspan="6" class="empty">Aún no hay historial de asignaciones.</td></tr>';
+}
+$("contenedorForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const d={numero:$("cNumero").value.trim(),cliente:$("cCliente").value.trim(),ubicacion:$("cUbicacion").value.trim(),
+ material:$("cMaterial").value,capacidad:$("cCapacidad").value,colocacion:$("cColocacion").value,estatus:$("cEstatus").value,
+ retiro:$("cRetiro").value,motivo:$("cMotivo").value.trim()};
+ if(contEditando){
+   let i=contenedores.findIndex(c=>c.uid===contEditando), anterior=contenedores[i];
+   const cambioCliente=anterior.cliente!==d.cliente;
+   const dejaAsignacion=anterior.estatus==="Asignado" && d.estatus!=="Asignado";
+   if(cambioCliente||dejaAsignacion){
+     const abierta=asignaciones.find(a=>a.contenedor===contEditando&&!a.hasta);
+     if(abierta){abierta.hasta=d.retiro||new Date().toISOString().slice(0,10);abierta.motivo=d.motivo||"Retiro / reasignación";}
+   }
+   if(d.estatus==="Asignado" && (anterior.estatus!=="Asignado"||cambioCliente)){
+     asignaciones.push({id:Date.now().toString(),contenedor:contEditando,numero:d.numero,cliente:d.cliente,
+       desde:d.colocacion||new Date().toISOString().slice(0,10),hasta:"",material:d.material,motivo:"Asignación"});
+   }
+   contenedores[i]={...anterior,...d};
+ }else{
+   const uid=Date.now().toString();contenedores.unshift({uid,...d});
+   if(d.estatus==="Asignado")asignaciones.push({id:(Date.now()+1).toString(),contenedor:uid,numero:d.numero,cliente:d.cliente,
+     desde:d.colocacion||new Date().toISOString().slice(0,10),hasta:"",material:d.material,motivo:"Asignación inicial"});
+ }
+ localStorage.setItem(ASIG_KEY,JSON.stringify(asignaciones));
+ guardarContenedores();renderAsignaciones();cancelarCont();
+});
+$("cancelC").addEventListener("click",cancelarCont);
+$("recoleccionForm").addEventListener("submit",e=>{
+ e.preventDefault();recolecciones.unshift({id:Date.now().toString(),contenedor:$("rContenedor").value,fecha:$("rFecha").value,cantidad:$("rCantidad").value,chofer:$("rChofer").value.trim(),unidad:$("rUnidad").value.trim(),notas:$("rNotas").value.trim()});
+ localStorage.setItem(REC_KEY,JSON.stringify(recolecciones));e.target.reset();renderRecolecciones();renderContenedores();generarReporte();
+});
+function eliminarRec(id){if(confirm("¿Eliminar esta recolección?")){recolecciones=recolecciones.filter(r=>r.id!==id);localStorage.setItem(REC_KEY,JSON.stringify(recolecciones));renderRecolecciones();renderContenedores();generarReporte();}}
+function renderRecolecciones(){
+ $("tablaRec").innerHTML=recolecciones.length?recolecciones.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(r=>{
+ const c=contenedores.find(x=>x.uid===r.contenedor);
+ return `<tr><td>${r.fecha}</td><td>${c?esc(c.numero+" · "+c.cliente):"Contenedor eliminado"}</td><td>${Number(r.cantidad).toFixed(3)} t</td><td>${esc(r.chofer)}</td><td>${esc(r.unidad||"-")}</td><td><button class="delete" onclick="eliminarRec('${r.id}')">Eliminar</button></td></tr>`;
+ }).join(""):'<tr><td colspan="6" class="empty">No hay recolecciones registradas.</td></tr>';
+}
+function actualizarDashboard(){
+ const hoy=new Date().toISOString().slice(0,10);
+ $("mCont").textContent=contenedores.length;
+ $("mPend").textContent=contenedores.filter(c=>{let d=datosCont(c.uid);return c.estatus==="Asignado"&&d.proxima&&d.proxima<=hoy}).length;
+ $("mTon").textContent=recolecciones.reduce((a,r)=>a+Number(r.cantidad||0),0).toFixed(1);
+ $("mCli").textContent=new Set(contenedores.filter(c=>c.cliente).map(c=>c.cliente.toLowerCase())).size;
+}
+
+function renderProductos(){
+ $("tablaProductos").innerHTML=productos.length?productos.map(p=>`<tr>
+ <td><strong>${esc(p.nombre)}</strong></td><td>${esc(p.tipo)}</td>
+ <td>${p.precio ? "$"+Number(p.precio).toLocaleString("es-MX") : "-"}</td>
+ <td>${esc(p.descripcion||"-")}</td>
+ <td><button class="edit" onclick="editarProducto('${p.id}')">Modificar</button> <button class="delete" onclick="eliminarProducto('${p.id}')">Eliminar</button></td>
+ </tr>`).join(""):'<tr><td colspan="5" class="empty">No hay productos o servicios registrados.</td></tr>';
+}
+function guardarProductos(){localStorage.setItem(PRODUCT_KEY,JSON.stringify(productos));renderProductos();}
+function editarProducto(id){
+ const p=productos.find(x=>x.id===id); if(!p)return;
+ productoEditando=id;
+ $("productoNombre").value=p.nombre;$("productoTipo").value=p.tipo;$("productoPrecio").value=p.precio||"";
+ $("productoDescripcion").value=p.descripcion||"";
+ $("guardarProducto").textContent="Guardar cambios";$("cancelarProducto").style.display="inline-block";
+}
+function cancelarEdicionProducto(){
+ productoEditando=null;$("productoForm").reset();$("guardarProducto").textContent="Agregar";$("cancelarProducto").style.display="none";
+}
+function eliminarProducto(id){
+ if(confirm("¿Eliminar este producto o servicio?")){
+  productos=productos.filter(p=>p.id!==id);guardarProductos();
+  if(productoEditando===id)cancelarEdicionProducto();
+ }
+}
+$("productoForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const datos={nombre:$("productoNombre").value.trim(),tipo:$("productoTipo").value,precio:$("productoPrecio").value,descripcion:$("productoDescripcion").value.trim()};
+ if(productoEditando){
+  const i=productos.findIndex(p=>p.id===productoEditando);
+  if(i>=0)productos[i]={...productos[i],...datos};
+ } else productos.unshift({id:Date.now().toString(),...datos});
+ guardarProductos();cancelarEdicionProducto();
+});
+$("cancelarProducto").addEventListener("click",cancelarEdicionProducto);
+
+function eliminar(id){if(confirm("¿Eliminar este cliente?")){clientes=clientes.filter(c=>c.id!==id);guardar();}}
+$("form").addEventListener("submit",e=>{
+ e.preventDefault();
+ clientes.unshift({id:Date.now().toString(),empresa:$("empresa").value.trim(),contacto:$("contacto").value.trim(),telefono:$("telefono").value.trim(),correo:$("correo").value.trim(),estatus:$("estatus").value,seguimiento:$("seguimiento").value,notas:$("notas").value.trim()});
+ e.target.reset();guardar();
+});
+const NAV_TITLES={dashboard:"Dashboard",clientes:"Clientes",contenedores:"Contenedores",recolecciones:"Recolecciones",reportes:"Reportes",productos:"Productos y servicios",catalogos:"Catálogos"};
+function mostrarApartado(view){
+ if(!NAV_TITLES[view])view="dashboard";
+ document.querySelectorAll("[data-view]").forEach(el=>el.classList.toggle("active",el.dataset.view===view));
+ document.querySelectorAll(".app-nav button").forEach(el=>{
+  const active=el.dataset.target===view;el.classList.toggle("active",active);
+  if(active)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current");
+ });
+ $("pageTitle").textContent=NAV_TITLES[view];
+ if(view==="reportes")generarReporte();
+ window.scrollTo({top:0,behavior:"instant"});
+}
+document.querySelectorAll(".app-nav button").forEach(b=>b.addEventListener("click",()=>mostrarApartado(b.dataset.target)));
+$("buscar").addEventListener("input",render);render();renderProductos();renderCatalogos();renderContenedores();renderRecolecciones();renderAsignaciones();periodoReporte('mes');mostrarApartado('dashboard');
+</script>
+</body>
+</html>
